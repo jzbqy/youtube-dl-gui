@@ -7,36 +7,58 @@ on:
       - release
 
 jobs:
-  create-release:
-    runs-on: ubuntu-latest
+  create-release-and-build-windows:
     permissions:
       contents: write
-    outputs:
-      release-tag: ${{ steps.create-release.outputs.tag }}
+    runs-on: windows-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      
-      - name: Setup node
+
+      - name: setup node
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 24
           cache: 'npm'
-      
-      - name: Get version
-        id: get-version
+
+      - name: install Rust 1.94.1
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # rust-toolchain action
+        with:
+          toolchain: 1.94.1
+
+      - name: Install cargo-about
+        uses: taiki-e/install-action@0fde6d128a3d980ceac30be8c8b8739abd963b81 # v2
+        with:
+          tool: cargo-about
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install tauri-cli
+        shell: bash
+        run: |
+          cargo install tauri-cli
+
+      - name: Get release info
+        id: release-info
         shell: bash
         run: |
           VERSION=$(node -p "require('./package.json').version")
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag=app-v$VERSION" >> $GITHUB_OUTPUT
-      
-      - name: Create draft release
-        id: create-release
-        uses: softprops/action-gh-release@c062e08bd532815a0873cb0bfa7de4cfcb045cd5 # v1
+
+      - uses: tauri-apps/tauri-action@fce9c6108b31ea247710505d3aaaa893ee6768d4 # v0
+        id: tauri
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: app-v${{ steps.get-version.outputs.version }}
-          name: 'Open Video Downloader v${{ steps.get-version.outputs.version }} (Simplified Chinese)'
-          body: '## 中文定制版
+          tagName: ${{ steps.release-info.outputs.tag }}
+          releaseName: 'Open Video Downloader v${{ steps.release-info.outputs.version }} (Simplified Chinese)'
+          releaseBody: '## 中文定制版
 
 ### 新增功能
 - 添加简体中文语言支持
@@ -52,13 +74,57 @@ jobs:
 - 更新 src/helpers/subtitles/languages.ts
 
 See the assets to download this version and install. This is a simplified Chinese version without auto-update feature.'
-          draft: true
+          releaseDraft: true
           prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          includeUpdaterJson: false
+          tauriScript: 'cargo tauri'
+          args: ''
 
-  publish-tauri:
-    needs: create-release
+      - name: Bundle Portable Version
+        shell: pwsh
+        run: |
+          $releaseDir = "src-tauri/target/release"
+          $layoutRoot = "portable-layout"
+          $portableFolder = "ovd-portable"
+
+          $pkg = Get-Content -Raw "package.json" | ConvertFrom-Json
+          $version = $pkg.version
+          
+          $arch = "x64"
+          
+          $zipName = "Open.Video.Downloader_$($version)_$($arch)-portable.zip"
+          $exeName = "Open.Video.Downloader_$($version)_$($arch).exe"
+          $keepFileName = ".keep"
+          
+          $tagName = "app-v$version"
+          Write-Host "Building portable bundle for $arch architecture: $zipName"
+          Write-Host "Using release tag: $tagName"
+          
+          $exe = Get-ChildItem -Path $releaseDir -Filter "*.exe" | Where-Object { $_.Name -notmatch "setup" } | Select-Object -First 1
+          if (-not $exe) { Write-Error "Could not find main exe in $releaseDir" }
+          
+          New-Item -ItemType Directory -Path "$layoutRoot/$portableFolder" -Force | Out-Null
+          New-Item -ItemType File -Path "$layoutRoot/$portableFolder/$keepFileName" -Value "Do not remove this file or directory." -Force | Out-Null
+          Copy-Item $exe.FullName -Destination "$layoutRoot/$exeName" -Force
+          
+          Compress-Archive -Path "$layoutRoot/*" -DestinationPath $zipName -Force
+      
+          echo "PORTABLE_ASSET=$zipName" >> $env:GITHUB_ENV
+          echo "RELEASE_TAG=$tagName" >> $env:GITHUB_ENV
+
+      - name: Upload Portable
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Uploading ${PORTABLE_ASSET} to release ${RELEASE_TAG}"
+          gh release upload "${RELEASE_TAG}" "${PORTABLE_ASSET}" --clobber
+
+    outputs:
+      release-tag: ${{ steps.release-info.outputs.tag }}
+
+  build-other-platforms:
+    needs: create-release-and-build-windows
     permissions:
       contents: write
     strategy:
@@ -72,8 +138,6 @@ See the assets to download this version and install. This is a simplified Chines
           - platform: 'ubuntu-24.04'
             args: ''
           - platform: 'ubuntu-24.04-arm'
-            args: ''
-          - platform: 'windows-latest'
             args: ''
           - platform: 'windows-11-arm'
             args: ''
@@ -143,17 +207,15 @@ See the assets to download this version and install. This is a simplified Chines
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_BUNDLER_NEW_APPIMAGE_FORMAT: "true"
         with:
-          tagName: ${{ needs.create-release.outputs.release-tag }}
-          releaseName: ''
-          releaseBody: ''
+          tagName: ${{ needs.create-release-and-build-windows.outputs.release-tag }}
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: false
           tauriScript: 'cargo tauri'
           args: ${{ matrix.args }}
 
-      - name: Bundle Portable Version (Windows only)
-        if: matrix.platform == 'windows-latest' || matrix.platform == 'windows-11-arm'
+      - name: Bundle Portable Version (Windows ARM only)
+        if: matrix.platform == 'windows-11-arm'
         shell: pwsh
         run: |
           $releaseDir = "src-tauri/target/release"
@@ -163,13 +225,13 @@ See the assets to download this version and install. This is a simplified Chines
           $pkg = Get-Content -Raw "package.json" | ConvertFrom-Json
           $version = $pkg.version
           
-          $arch = if ($env:RUNNER_ARCH -eq 'ARM64') { 'arm64' } else { 'x64' }
+          $arch = "arm64"
           
           $zipName = "Open.Video.Downloader_$($version)_$($arch)-portable.zip"
           $exeName = "Open.Video.Downloader_$($version)_$($arch).exe"
           $keepFileName = ".keep"
           
-          $tagName = "app-v$version"
+          $tagName = "${{ needs.create-release-and-build-windows.outputs.release-tag }}"
           Write-Host "Building portable bundle for $arch architecture: $zipName"
           Write-Host "Using release tag: $tagName"
           
@@ -185,8 +247,8 @@ See the assets to download this version and install. This is a simplified Chines
           echo "PORTABLE_ASSET=$zipName" >> $env:GITHUB_ENV
           echo "RELEASE_TAG=$tagName" >> $env:GITHUB_ENV
 
-      - name: Upload Portable (Windows only)
-        if: matrix.platform == 'windows-latest' || matrix.platform == 'windows-11-arm'
+      - name: Upload Portable (Windows ARM only)
+        if: matrix.platform == 'windows-11-arm'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
