@@ -7,7 +7,58 @@ on:
       - release
 
 jobs:
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      release-tag: ${{ steps.create-release.outputs.tag }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      
+      - name: Setup node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+          cache: 'npm'
+      
+      - name: Get version
+        id: get-version
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=app-v$VERSION" >> $GITHUB_OUTPUT
+      
+      - name: Create draft release
+        id: create-release
+        uses: softprops/action-gh-release@c062e08bd532815a0873cb0bfa7de4cfcb045cd5 # v1
+        with:
+          tag_name: app-v${{ steps.get-version.outputs.version }}
+          name: 'Open Video Downloader v${{ steps.get-version.outputs.version }} (Simplified Chinese)'
+          body: '## 中文定制版
+
+### 新增功能
+- 添加简体中文语言支持
+- 默认语言设置为简体中文
+
+### 改进
+- 使用中国大陆习惯的中文用词（视频、音频、播放列表等）
+- 语言选择界面简化
+
+### 技术细节
+- 更新 src/locales/zh-CN.json
+- 更新 src/i18n.ts
+- 更新 src/helpers/subtitles/languages.ts
+
+See the assets to download this version and install. This is a simplified Chinese version without auto-update feature.'
+          draft: true
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   publish-tauri:
+    needs: create-release
     permissions:
       contents: write
     strategy:
@@ -92,24 +143,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_BUNDLER_NEW_APPIMAGE_FORMAT: "true"
         with:
-          tagName: app-v__VERSION__
-          releaseName: 'Open Video Downloader v__VERSION__ (Simplified Chinese)'
-          releaseBody: '## 中文定制版
-
-### 新增功能
-- 添加简体中文语言支持
-- 默认语言设置为简体中文
-
-### 改进
-- 使用中国大陆习惯的中文用词（视频、音频、播放列表等）
-- 语言选择界面简化
-
-### 技术细节
-- 更新 src/locales/zh-CN.json
-- 更新 src/i18n.ts
-- 更新 src/helpers/subtitles/languages.ts
-
-See the assets to download this version and install. This is a simplified Chinese version without auto-update feature.'
+          tagName: ${{ needs.create-release.outputs.release-tag }}
+          releaseName: ''
+          releaseBody: ''
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: false
