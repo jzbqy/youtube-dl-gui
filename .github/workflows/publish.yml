@@ -10,9 +10,6 @@ jobs:
   publish-tauri:
     permissions:
       contents: write
-    env:
-      WINDOWS_PFX_B64: ${{ secrets.WINDOWS_PFX_B64 }}
-      WINDOWS_PFX_PASSWORD: ${{ secrets.WINDOWS_PFX_PASSWORD }}
     strategy:
       fail-fast: false
       matrix:
@@ -76,14 +73,7 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-      - name: Setup Sentry CLI
-        if: matrix.platform != 'windows-11-arm' && ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
-        uses: matbour/setup-sentry-cli@ac9d752ca8f44ef545fb2ce2dcd329cce57d778b # v2
-        with:
-          version: 2.58.2
-          token: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          organization: ${{ secrets.SENTRY_ORG }}
-          project: ${{ secrets.SENTRY_PROJECT }}
+
 
       - name: Override tauri-cli (ubuntu only)
         if: matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm'
@@ -150,34 +140,6 @@ jobs:
             $outPath = Join-Path $publicDir $pdb.Name
             & "$($pdbcopy.FullName)" "$($pdb.FullName)" "$outPath" -p
           }
-
-      - name: Upload debug symbols to Sentry
-        if: matrix.platform != 'windows-11-arm'
-        shell: bash
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-        run: |
-          VERSION="$(node -p 'require("./package.json").version')"
-          SENTRY_RELEASE="ovd@${VERSION}"
-          export SENTRY_RELEASE
-          
-          echo "Using Sentry release: $SENTRY_RELEASE"
-          
-          cd src-tauri
-          
-          if [ -d "target/release/public-pdb" ]; then
-            sentry-cli debug-files upload --include-sources target/release/public-pdb
-          else
-            sentry-cli debug-files upload --include-sources target/release
-          fi
-          
-          if [ "${{ matrix.platform }}" = "ubuntu-24.04" ]; then
-            sentry-cli releases new "$SENTRY_RELEASE" || true
-            sentry-cli releases set-commits "$SENTRY_RELEASE" --auto || true
-            sentry-cli releases finalize "$SENTRY_RELEASE" || true
-          fi
 
       - name: Fetch tool binaries for MSIX (Windows only)
         if: matrix.platform == 'windows-latest' || matrix.platform == 'windows-11-arm'
