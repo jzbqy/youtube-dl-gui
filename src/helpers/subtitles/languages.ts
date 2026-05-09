@@ -1,55 +1,46 @@
-import ISO6391 from 'iso-639-1';
+import { createI18n, I18n } from 'vue-i18n';
+import en from './locales/en.json';
+import es from './locales/es.json';
+import nl from './locales/nl.json';
+import it from './locales/it.json';
+import fr from './locales/fr.json';
+import de from './locales/de.json';
+import nb from './locales/nb.json';
+import ru from './locales/ru.json';
+import tr from './locales/tr.json';
+import ptBR from './locales/pt-BR.json';
+import zhTW from './locales/zh-TW.json';
+import zhCN from './locales/zh-CN.json';
+import { detectBrowserLanguageCodes } from './helpers/subtitles/languages.ts';
 
-export interface SubtitleLanguageOption {
-  code: string;
-  englishName: string;
-  nativeName: string;
+export const availableLocales: Record<string, boolean> = {
+  'en': true, 'es': true, 'nl': true, 'it': true, 'fr': true, 'de': true, 'nb': true, 'ru': true, 'tr': true, 'pt-BR': true, 'zh-TW': true, 'zh-CN': true,
+} as const;
+
+type MessageSchema = typeof en;
+export type Locale = keyof typeof availableLocales;
+
+export function getDefaultLocale() {
+  return 'zh-CN';
 }
 
-const codes = ISO6391.getAllCodes();
-const expanded_codes: Record<string, SubtitleLanguageOption> = {
-  'pt-BR': { code: 'pt-BR', englishName: 'Portuguese (Brazil)', nativeName: 'Português (Brasil)' },
-  'zh-TW': { code: 'zh-TW', englishName: 'Traditional Chinese (Taiwan)', nativeName: '繁體中文（中國台灣）' },
-  'zh-CN': { code: 'zh-CN', englishName: 'Simplified Chinese (China)', nativeName: '简体中文（中國大陸）' },
-};
-
-export const languageOptions: SubtitleLanguageOption[] = [...codes, ...Object.keys(expanded_codes)]
-  .map((code) => {
-    if (expanded_codes[code]) return expanded_codes[code];
-
-    const englishName = ISO6391.getName(code);
-    const nativeName = ISO6391.getNativeName(code);
-
-    return {
-      code,
-      englishName,
-      nativeName,
-    };
-  })
-  .sort((a, b) => a.englishName.localeCompare(b.englishName));
-
-export const languageOptionsLookup = new Map(
-  languageOptions.map(option => [option.code, option] as const),
-);
-
-export function detectBrowserLanguageCodes(): string[] {
-  let candidates = navigator?.languages ?? [];
-  if (candidates.length === 0) {
-    candidates = [navigator.language];
-  }
-
-  const normalized = new Set<string>();
-
-  for (const candidate of candidates ?? []) {
-    if (!candidate) {
-      continue;
-    }
-
-    const isoCode = candidate.split('-')[0]?.toLowerCase();
-    if (isoCode && ISO6391.validate(isoCode)) {
-      normalized.add(isoCode);
-    }
-  }
-
-  return Array.from(normalized);
-}
+export const i18n: I18n = createI18n<[MessageSchema], Locale>({
+  locale: 'zh-CN',
+  legacy: false,
+  globalInjection: false,
+  fallbackLocale: 'zh-CN',
+  messages: {
+    en,
+    es,
+    nl,
+    it,
+    fr,
+    de,
+    nb,
+    ru,
+    tr,
+    'pt-BR': ptBR,
+    'zh-TW': zhTW,
+    'zh-CN': zhCN,
+  },
+});
