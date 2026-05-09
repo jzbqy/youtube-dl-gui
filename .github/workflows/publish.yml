@@ -110,10 +110,6 @@ jobs:
           organization: ${{ secrets.SENTRY_ORG }}
           project: ${{ secrets.SENTRY_PROJECT }}
 
-      # TEMPORARY WORKAROUND:
-      # Use a custom tauri-cli branch to enable the new "truly portable" AppImage format.
-      # This relies on TAURI_BUNDLER_NEW_APPIMAGE_FORMAT=true and can be removed once
-      # https://github.com/tauri-apps/tauri/pull/12491 is merged and released upstream.
       - name: Override tauri-cli (ubuntu only)
         if: matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm'
         shell: bash
@@ -121,8 +117,6 @@ jobs:
           cargo install tauri-cli --git https://github.com/tauri-apps/tauri --branch feat/truly-portable-appimage --locked --force
           echo "TAURI_BUNDLER_NEW_APPIMAGE_FORMAT=true" >> $GITHUB_ENV
 
-      # TEMPORARY WORKAROUND:
-      # Because we use "cargo tauri" in that tauri build step, we always have to install tauri cli here.
       - name: Install tauri-cli
         if: matrix.platform != 'ubuntu-24.04' && matrix.platform != 'ubuntu-24.04-arm'
         shell: bash
@@ -138,35 +132,15 @@ jobs:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
           APPLE_API_KEY: ${{ secrets.APPLE_API_KEY }}
           APPLE_API_KEY_PATH: ${{ secrets.APPLE_API_KEY_PATH }}
-          # TEMPORARY WORKAROUND:
-          # This environment variable is needed to enable the new appimage features.
           TAURI_BUNDLER_NEW_APPIMAGE_FORMAT: "true"
         with:
           tagName: app-v__VERSION__
           releaseName: 'Open Video Downloader v__VERSION__'
-          releaseBody: |
-  ## 中文定制版 v3.2.0-cn
-
-  ### 新增功能
-  - 添加简体中文语言支持
-  - 默认语言设置为简体中文
-
-  ### 改进
-  - 使用中国大陆习惯的中文用词（视频、音频、播放列表等）
-  - 语言选择界面简化
-
-  ### 技术细节
-  - 更新 `src/locales/zh-CN.json`
-  - 更新 `src/i18n.ts`
-  - 更新 `src/helpers/subtitles/languages.ts`
-
-  See the assets to download this version and install. If you have an existing install, it will auto-update on launch.
+          releaseBody: "## 中文定制版\n\n### 新增功能\n- 添加简体中文语言支持\n- 默认语言设置为简体中文\n\n### 改进\n- 使用中国大陆习惯的中文用词（视频、音频、播放列表等）\n- 语言选择界面简化\n\n### 技术细节\n- 更新 src/locales/zh-CN.json\n- 更新 src/i18n.ts\n- 更新 src/helpers/subtitles/languages.ts\n\nSee the assets to download this version and install. If you have an existing install, it will auto-update on launch."
           releaseDraft: true
           prerelease: false
           includeUpdaterJson: true
           updaterJsonPreferNsis: true
-          # TEMPORARY WORKAROUND:
-          # This option is needed to use the possibly overriden branch of tauri-cli, to fix appimages.
           tauriScript: 'cargo tauri'
           args: ${{ matrix.args }}
 
@@ -252,7 +226,6 @@ jobs:
           $pkg = Get-Content -Raw "package.json" | ConvertFrom-Json
           $version = $pkg.version
           
-          # Detect architecture
           $arch = if ($env:RUNNER_ARCH -eq 'ARM64') { 'arm64' } else { 'x64' }
           
           $zipName = "Open.Video.Downloader_$($version)_$($arch)-portable.zip"
@@ -350,35 +323,35 @@ jobs:
           $makeappx = Get-ChildItem "C:\Program Files (x86)\Windows Kits\10\bin" -Recurse -Filter "MakeAppx.exe" |
             Sort-Object FullName -Descending | Select-Object -First 1 | ForEach-Object FullName
           if (-not $makeappx) { throw "MakeAppx.exe not found (Windows SDK missing?)" }
-  
+
           $x64 = Get-ChildItem "dist/msix/x64"   -Filter "*.msix" | Select-Object -First 1
           $arm64 = Get-ChildItem "dist/msix/arm64" -Filter "*.msix" | Select-Object -First 1
           if (-not $x64)   { throw "Missing x64 .msix under dist/msix/x64" }
           if (-not $arm64) { throw "Missing arm64 .msix under dist/msix/arm64" }
-  
+
           if (Test-Path "unpack_tmp") { Remove-Item "unpack_tmp" -Recurse -Force }
           New-Item -ItemType Directory -Force -Path "unpack_tmp" | Out-Null
           & $makeappx unpack /p $x64.FullName /d "unpack_tmp" | Out-Null
           [xml]$xml = Get-Content "unpack_tmp\AppxManifest.xml"
           $version = $xml.Package.Identity.Version
           if (-not $version) { throw "Failed to read Identity.Version from x64 manifest" }
-  
+
           $pdbs = Get-ChildItem -Path "dist/symbols" -Filter "*.pdb" -Recurse
           if (-not $pdbs) { throw "No PDB files found under dist/symbols" }
           Compress-Archive -Path $pdbs.FullName -DestinationPath "OpenVideoDownloader.appxsym" -Force
-  
+
           if (Test-Path "bundle_in") { Remove-Item "bundle_in" -Recurse -Force }
           New-Item -ItemType Directory -Force -Path "bundle_in" | Out-Null
           Copy-Item $x64.FullName "bundle_in\OpenVideoDownloader_x64.msix" -Force
           Copy-Item $arm64.FullName "bundle_in\OpenVideoDownloader_arm64.msix" -Force
-  
+
           & $makeappx bundle /d "bundle_in" /p "OpenVideoDownloader.msixbundle" /bv $version | Out-Null
-  
+
           if (Test-Path "upload") { Remove-Item "upload" -Recurse -Force }
           New-Item -ItemType Directory -Force -Path "upload" | Out-Null
           Copy-Item "OpenVideoDownloader.msixbundle" "upload\" -Force
           Copy-Item "OpenVideoDownloader.appxsym" "upload\" -Force
-  
+
           Compress-Archive -Path "upload\*" -DestinationPath "OpenVideoDownloader.msixupload" -Force
 
       - name: Upload msixupload artifact
