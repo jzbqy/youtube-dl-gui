@@ -5,6 +5,28 @@
 
 **[简体中文](README.md)** | **[English](README.en.md)**
 
+## About This Fork
+
+This repository is a Simplified Chinese customized version of [jely2002/youtube-dl-gui](https://github.com/jely2002/youtube-dl-gui).
+
+Thanks to the original author [Jelle Gleed](https://github.com/jely2002) for developing this excellent project!
+
+### Main Changes
+- Added full Simplified Chinese translation
+- Set Simplified Chinese as default language
+- Removed auto-update feature (no signing keys)
+- Optimized Chinese terminology
+
+### About the Unsigned Version
+This version is **not code signed**, so:
+- **Windows**: SmartScreen warning may appear, click "More info" → "Run anyway"
+- **macOS**: You need to allow it in "System Settings" → "Privacy & Security"
+- **No auto-updates**: You'll need to manually download and install new versions
+
+For the official signed version, please use the [original author's version](https://github.com/jely2002/youtube-dl-gui).
+
+---
+
 Open Video Downloader is a simple, cross-platform desktop application that lets you download videos, audio, subtitles and metadata from hundreds of supported websites, not just YouTube.  
 It provides an easy-to-use interface around [yt-dlp](https://github.com/yt-dlp/yt-dlp) so you don't have to touch the command line.
 

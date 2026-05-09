@@ -14,6 +14,28 @@
 
 ---
 
+## 关于此复刻
+
+本仓库是 [jely2002/youtube-dl-gui](https://github.com/jely2002/youtube-dl-gui) 的简体中文定制版。
+
+感谢原作者 [Jelle Gleed](https://github.com/jely2002) 开发的优秀项目！
+
+### 主要修改
+- 添加完整的简体中文翻译
+- 默认语言设置为简体中文
+- 移除自动更新功能（因无签名密钥）
+- 优化中文用词习惯
+
+### 关于未签名版本
+此版本**未经过代码签名**，因此：
+- **Windows**: 运行时可能会显示 SmartScreen 安全警告，点击"更多信息" → "仍要运行"即可
+- **macOS**: 需要在"系统设置" → "隐私与安全性"中允许运行
+- **无自动更新**: 如需更新，需要手动下载新版本安装
+
+如需正式签名版本，请使用 [原作者的官方版本](https://github.com/jely2002/youtube-dl-gui)。
+
+---
+
 Open Video Downloader 是一个简单的跨平台桌面应用程序，让你可以从数百个支持的网站下载视频、音频、字幕和元数据，不仅仅是 YouTube。  
 它围绕 [yt-dlp](https://github.com/yt-dlp/yt-dlp) 提供了一个易于使用的界面，所以你不必接触命令行。
 
