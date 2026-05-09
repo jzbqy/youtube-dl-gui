@@ -1,0 +1,77 @@
+name: 'Build Portable Windows'
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install Rust 1.94.1
+        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9
+        with:
+          toolchain: 1.94.1
+
+      - name: Install cargo-about
+        uses: taiki-e/install-action@0fde6d128a3d980ceac30be8c8b8739abd963b81
+        with:
+          tool: cargo-about
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae
+        with:
+          workspaces: './src-tauri -> target'
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build Windows exe
+        uses: tauri-apps/tauri-action@fce9c6108b31ea247710505d3aaaa893ee6768d4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          args: '--no-bundle'
+
+      - name: Bundle Portable Version
+        shell: pwsh
+        run: |
+          $releaseDir = "src-tauri/target/release"
+          $layoutRoot = "portable-layout"
+          $portableFolder = "ovd-portable"
+
+          $pkg = Get-Content -Raw "package.json" | ConvertFrom-Json
+          $version = $pkg.version
+          
+          $arch = 'x64'
+          $zipName = "Open.Video.Downloader_$($version)_$($arch)-portable.zip"
+          $exeName = "Open.Video.Downloader_$($version)_$($arch).exe"
+          $keepFileName = ".keep"
+          
+          Write-Host "Building portable bundle for $arch architecture: $zipName"
+          
+          $exe = Get-ChildItem -Path $releaseDir -Filter "*.exe" | Where-Object { $_.Name -notmatch "setup" } | Select-Object -First 1
+          if (-not $exe) { Write-Error "Could not find main exe in $releaseDir" }
+          
+          New-Item -ItemType Directory -Path "$layoutRoot/$portableFolder" -Force | Out-Null
+          New-Item -ItemType File -Path "$layoutRoot/$portableFolder/$keepFileName" -Value "Do not remove this file or directory." -Force | Out-Null
+          Copy-Item $exe.FullName -Destination "$layoutRoot/$exeName" -Force
+          
+          Compress-Archive -Path "$layoutRoot/*" -DestinationPath $zipName -Force
+
+      - name: Upload Portable Artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ovd-portable-x64
+          path: Open.Video.Downloader_*_x64-portable.zip
