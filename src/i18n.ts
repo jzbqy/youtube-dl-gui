@@ -21,6 +21,18 @@ type MessageSchema = typeof en;
 export type Locale = keyof typeof availableLocales;
 
 export function getDefaultLocale() {
+  const browserLocales = detectBrowserLanguageCodes();
+  for (const locale of browserLocales) {
+    if (availableLocales[locale]) {
+      return locale;
+    }
+    if (locale === 'zh' && availableLocales['zh-CN']) {
+      return 'zh-CN';
+    }
+    if (locale.startsWith('zh-') && availableLocales[locale]) {
+      return locale;
+    }
+  }
   return 'zh-CN';
 }
 
