@@ -29,10 +29,10 @@ export function getDefaultLocale() {
 }
 
 export const i18n: I18n = createI18n<[MessageSchema], Locale>({
-  locale: 'en',
+  locale: 'zh-CN',
   legacy: false,
   globalInjection: false,
-  fallbackLocale: 'en',
+  fallbackLocale: 'zh-CN',
   messages: {
     en,
     es,
