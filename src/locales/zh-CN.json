@@ -20,7 +20,8 @@
     "unknown": "未知",
     "confirm": "确认",
     "best": "最佳",
-    "resume": "继续"
+    "resume": "继续",
+    "unavailableForSelectedResolution": "所选分辨率不可用"
   },
   "layout": {
     "header": {
