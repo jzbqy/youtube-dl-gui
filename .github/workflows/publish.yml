@@ -73,8 +73,6 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
-
-
       - name: Override tauri-cli (ubuntu only)
         if: matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm'
         shell: bash
@@ -95,57 +93,28 @@ jobs:
           TAURI_BUNDLER_NEW_APPIMAGE_FORMAT: "true"
         with:
           tagName: app-v__VERSION__
-          releaseName: 'Open Video Downloader v__VERSION__'
-          releaseBody: "## 中文定制版\n\n### 新增功能\n- 添加简体中文语言支持\n- 默认语言设置为简体中文\n\n### 改进\n- 使用中国大陆习惯的中文用词（视频、音频、播放列表等）\n- 语言选择界面简化\n\n### 技术细节\n- 更新 src/locales/zh-CN.json\n- 更新 src/i18n.ts\n- 更新 src/helpers/subtitles/languages.ts\n\nSee the assets to download this version and install. If you have an existing install, it will auto-update on launch."
+          releaseName: 'Open Video Downloader v__VERSION__ (Simplified Chinese)'
+          releaseBody: '## 中文定制版
+
+### 新增功能
+- 添加简体中文语言支持
+- 默认语言设置为简体中文
+
+### 改进
+- 使用中国大陆习惯的中文用词（视频、音频、播放列表等）
+- 语言选择界面简化
+
+### 技术细节
+- 更新 src/locales/zh-CN.json
+- 更新 src/i18n.ts
+- 更新 src/helpers/subtitles/languages.ts
+
+See the assets to download this version and install. This is a simplified Chinese version without auto-update feature.'
           releaseDraft: true
           prerelease: false
-          includeUpdaterJson: true
-          updaterJsonPreferNsis: true
+          includeUpdaterJson: false
           tauriScript: 'cargo tauri'
           args: ${{ matrix.args }}
-
-      - name: Create public PDBs (Windows only)
-        if: matrix.platform == 'windows-latest' || matrix.platform == 'windows-11-arm'
-        shell: pwsh
-        run: |
-          $kitsRoot = "${Env:ProgramFiles(x86)}\Windows Kits\10"
-          if (-not (Test-Path $kitsRoot)) {
-            Write-Error "Windows 10 Kits folder not found at $kitsRoot"
-          }
-
-          $arch = if ($env:RUNNER_ARCH -eq 'ARM64') { 'arm64' } else { 'x64' }
-          $pdbcopy = Get-ChildItem -Path $kitsRoot -Recurse -Filter "pdbcopy.exe" -ErrorAction SilentlyContinue |
-            Where-Object { $_.FullName -match "\\$arch\\pdbcopy\.exe$" } |
-            Select-Object -First 1
-
-          if (-not $pdbcopy -and $env:RUNNER_ARCH -eq 'ARM64') {
-            $pdbcopy = Get-ChildItem -Path $kitsRoot -Recurse -Filter "pdbcopy.exe" -ErrorAction SilentlyContinue |
-              Where-Object { $_.FullName -match "\\x64\\pdbcopy\.exe$" } |
-              Select-Object -First 1
-          }
-
-          if (-not $pdbcopy) {
-            Write-Error "pdbcopy.exe not found under $kitsRoot"
-          }
-
-          $pdbs = Get-ChildItem -Path "src-tauri/target/release" -Filter "*.pdb"
-          if (-not $pdbs) {
-            Write-Error "No PDB files found under src-tauri/target/release"
-          }
-
-          $publicDir = "src-tauri/target/release/public-pdb"
-          New-Item -ItemType Directory -Path $publicDir -Force | Out-Null
-
-          foreach ($pdb in $pdbs) {
-            $outPath = Join-Path $publicDir $pdb.Name
-            & "$($pdbcopy.FullName)" "$($pdb.FullName)" "$outPath" -p
-          }
-
-      - name: Fetch tool binaries for MSIX (Windows only)
-        if: matrix.platform == 'windows-latest' || matrix.platform == 'windows-11-arm'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run manifest:fetch
 
       - name: Bundle Portable Version (Windows only)
         if: matrix.platform == 'windows-latest' || matrix.platform == 'windows-11-arm'
@@ -196,4 +165,3 @@ jobs:
           $installer = Join-Path $env:RUNNER_TEMP "vc_redist.arm64.exe"
           Invoke-WebRequest -Uri "https://aka.ms/vc14/vc_redist.arm64.exe" -OutFile $installer
           Start-Process -FilePath $installer -ArgumentList "/install","/quiet","/norestart" -Wait
-
