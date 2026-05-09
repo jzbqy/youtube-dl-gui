@@ -1,8 +1,8 @@
 {
   "tray": {
-    "quit": "结束",
+    "quit": "退出",
     "showOrHide": "显示/隐藏窗口",
-    "addToQueue": "从剪贴板加入",
+    "addToQueue": "从剪贴板添加",
     "downloadQueue": "下载队列中的项目",
     "shortcuts": {
       "ctrlShiftV": "Ctrl + Shift + V",
@@ -18,11 +18,11 @@
     },
     "queueDownloading": {
       "title": "正在下载队列中的项目",
-      "body": "正在下载 {n} 个项目 | 正在下载 {n} 个项目"
+      "body": "正在下载 {n} 个项目"
     },
     "queueFinished": {
-      "title": "所有队列中的项目皆已完成下载",
-      "body": "已完成下载 {n} 个项目 | 已完成下载 {n} 个项目"
+      "title": "所有队列中的项目均已完成下载",
+      "body": "已完成下载 {n} 个项目"
     },
     "videoFinished": {
       "title": "下载完成",
@@ -38,7 +38,7 @@
     },
     "playlistReady": {
       "title": "播放列表下载已准备就绪",
-      "body": "{title} | {title} ({n} 个项目) | {title} ({n} 个项目)"
+      "body": "{title} ({n} 个项目)"
     },
     "downloadFailed": {
       "title": "下载失败",
