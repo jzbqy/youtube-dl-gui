@@ -53,4 +53,3 @@ export function detectBrowserLanguageCodes(): string[] {
 
   return Array.from(normalized);
 }
-
