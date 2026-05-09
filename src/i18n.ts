@@ -21,11 +21,7 @@ type MessageSchema = typeof en;
 export type Locale = keyof typeof availableLocales;
 
 export function getDefaultLocale() {
-  const browserLocale = detectBrowserLanguageCodes()[0];
-  if (availableLocales[browserLocale]) {
-    return browserLocale;
-  }
-  return 'en';
+  return 'zh-CN';
 }
 
 export const i18n: I18n = createI18n<[MessageSchema], Locale>({
