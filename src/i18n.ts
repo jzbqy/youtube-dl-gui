@@ -10,10 +10,11 @@ import ru from './locales/ru.json';
 import tr from './locales/tr.json';
 import ptBR from './locales/pt-BR.json';
 import zhTW from './locales/zh-TW.json';
+import zhCN from './locales/zh-CN.json';
 import { detectBrowserLanguageCodes } from './helpers/subtitles/languages.ts';
 
 export const availableLocales: Record<string, boolean> = {
-  'en': true, 'es': true, 'nl': true, 'it': true, 'fr': true, 'de': true, 'nb': true, 'ru': true, 'tr': true, 'pt-BR': true, 'zh-TW': true,
+  'en': true, 'es': true, 'nl': true, 'it': true, 'fr': true, 'de': true, 'nb': true, 'ru': true, 'tr': true, 'pt-BR': true, 'zh-TW': true, 'zh-CN': true,
 } as const;
 
 type MessageSchema = typeof en;
@@ -44,5 +45,6 @@ export const i18n: I18n = createI18n<[MessageSchema], Locale>({
     tr,
     'pt-BR': ptBR,
     'zh-TW': zhTW,
+    'zh-CN': zhCN,
   },
 });
