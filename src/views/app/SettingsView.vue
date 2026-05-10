@@ -28,15 +28,20 @@
       <base-fieldset :legend="t('about.title')" label="">
         <div class="flex flex-col gap-2">
           <div class="flex gap-2 mb-2 w-full">
-            <a href="https://github.com/jely2002/youtube-dl-gui" class="link link-subtle" target="_blank" rel="noopener">
-              {{ t('about.links.github') }}
+            <a href="https://github.com/jzbqy/youtube-dl-gui" class="link link-subtle" target="_blank" rel="noopener">
+              {{ t('about.links.githubCn') }}
             </a>
             <hr class="divider divider-horizontal mx-0 border-none">
+            <a href="https://github.com/jely2002/youtube-dl-gui" class="link link-subtle" target="_blank" rel="noopener">
+              {{ t('about.links.githubOriginal') }}
+            </a>
+          </div>
+          <div class="flex gap-2 mb-2 w-full">
             <a href="https://github.com/jely2002/youtube-dl-gui/wiki" class="link" target="_blank" rel="noopener">
               {{ t('about.links.wiki') }}
             </a>
             <hr class="divider divider-horizontal mx-0 border-none">
-            <a href="https://github.com/jely2002/youtube-dl-gui/issues/new?template=bug_report.md" class="link" target="_blank" rel="noopener">
+            <a href="https://github.com/jzbqy/youtube-dl-gui/issues/new?template=bug_report.md" class="link" target="_blank" rel="noopener">
               {{ t('about.links.reportABug') }}
             </a>
           </div>

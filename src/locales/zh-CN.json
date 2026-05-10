@@ -959,13 +959,14 @@
   },
   "about": {
     "title": "关于",
-    "credit": "由 jely2002 和贡献者用心制作",
+    "credit": "简体中文定制版 | 原作者：jely2002",
     "poweredBy": "使用开源技术：",
     "viewLicenses": "查看许可证",
     "version": "版本：{version}",
     "links": {
-      "github": "GitHub",
-      "wiki": "Wiki",
+      "githubCn": "简体中文定制版 GitHub",
+      "githubOriginal": "原作者 GitHub",
+      "wiki": "教程文档",
       "reportABug": "报告错误"
     }
   }
