@@ -61,22 +61,32 @@ jobs:
           releaseBody: '## 中文定制版
 
 ### 新增功能
-- 添加简体中文语言支持
+- 添加完整的简体中文翻译
 - 默认语言设置为简体中文
-
-### 改进
 - 使用中国大陆习惯的中文用词（视频、音频、播放列表等）
-- 语言选择界面简化
 
-### 技术细节
-- 更新 src/locales/zh-CN.json
-- 更新 src/i18n.ts
-- 更新 src/helpers/subtitles/languages.ts
+### 关于构建版本
 
-See the assets to download this version and install. This is a simplified Chinese version without auto-update feature.'
+此复刻版本目前仅提供 Windows 平台的构建版本，原因如下：
+
+1. **签名证书要求**：
+   - macOS 应用必须经过 Apple 签名和公证才能正常运行
+   - Windows 应用签名可以避免 SmartScreen 安全警告
+   - 获得这些签名需要付费的开发者账号（Apple $99/年，Windows 签名证书约 $200+/年）
+
+2. **其他平台的可替代方案**：
+   - macOS 和 Linux 用户可以直接复刻此仓库到自己的 GitHub 账号，利用 GitHub Actions 免费构建服务
+   - 具体构建步骤可参考原项目的 CONTRIBUTING.md
+
+3. **保留完整的自动更新功能**：
+   - Windows 版本保留了完整的自动更新功能
+
+如需其他平台的官方签名版本，请使用原作者的官方版本。
+
+See the assets to download this version and install.'
           releaseDraft: true
           prerelease: false
-          includeUpdaterJson: false
+          includeUpdaterJson: true
           tauriScript: 'cargo tauri'
           args: ''
 
@@ -119,147 +129,3 @@ See the assets to download this version and install. This is a simplified Chines
         run: |
           echo "Uploading ${PORTABLE_ASSET} to release ${RELEASE_TAG}"
           gh release upload "${RELEASE_TAG}" "${PORTABLE_ASSET}" --clobber
-
-    outputs:
-      release-tag: ${{ steps.release-info.outputs.tag }}
-
-  build-other-platforms:
-    needs: create-release-and-build-windows
-    permissions:
-      contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - platform: 'macos-latest'
-            args: '--target aarch64-apple-darwin'
-          - platform: 'macos-latest'
-            args: '--target x86_64-apple-darwin'
-          - platform: 'ubuntu-24.04'
-            args: ''
-          - platform: 'ubuntu-24.04-arm'
-            args: ''
-          - platform: 'windows-11-arm'
-            args: ''
-
-    runs-on: ${{ matrix.platform }}
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libssl-dev \
-            libgtk-3-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev \
-            patchelf \
-            xdg-utils
-
-      - name: setup node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version: 24
-          cache: 'npm'
-
-      - name: install Rust 1.94.1
-        uses: dtolnay/rust-toolchain@3c5f7ea28cd621ae0bf5283f0e981fb97b8a7af9 # rust-toolchain action
-        with:
-          toolchain: 1.94.1
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || matrix.platform == 'windows-11-arm' && 'aarch64-pc-windows-msvc' || '' }}
-
-      - name: Install cargo-about
-        uses: taiki-e/install-action@0fde6d128a3d980ceac30be8c8b8739abd963b81 # v2
-        with:
-          tool: cargo-about
-
-      - name: Rust cache
-        uses: Swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
-        with:
-          workspaces: './src-tauri -> target'
-
-      - name: Install frontend dependencies
-        run: npm ci
-
-      - name: Override tauri-cli (ubuntu only)
-        if: matrix.platform == 'ubuntu-24.04' || matrix.platform == 'ubuntu-24.04-arm'
-        shell: bash
-        run: |
-          cargo install tauri-cli --git https://github.com/tauri-apps/tauri --branch feat/truly-portable-appimage --locked --force
-          echo "TAURI_BUNDLER_NEW_APPIMAGE_FORMAT=true" >> $GITHUB_ENV
-
-      - name: Install tauri-cli
-        if: matrix.platform != 'ubuntu-24.04' && matrix.platform != 'ubuntu-24.04-arm'
-        shell: bash
-        run: |
-          cargo install tauri-cli
-
-      - uses: tauri-apps/tauri-action@fce9c6108b31ea247710505d3aaaa893ee6768d4 # v0
-        id: tauri
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_BUNDLER_NEW_APPIMAGE_FORMAT: "true"
-        with:
-          tagName: ${{ needs.create-release-and-build-windows.outputs.release-tag }}
-          releaseDraft: true
-          prerelease: false
-          includeUpdaterJson: false
-          tauriScript: 'cargo tauri'
-          args: ${{ matrix.args }}
-
-      - name: Bundle Portable Version (Windows ARM only)
-        if: matrix.platform == 'windows-11-arm'
-        shell: pwsh
-        run: |
-          $releaseDir = "src-tauri/target/release"
-          $layoutRoot = "portable-layout"
-          $portableFolder = "ovd-portable"
-
-          $pkg = Get-Content -Raw "package.json" | ConvertFrom-Json
-          $version = $pkg.version
-          
-          $arch = "arm64"
-          
-          $zipName = "Open.Video.Downloader_$($version)_$($arch)-portable.zip"
-          $exeName = "Open.Video.Downloader_$($version)_$($arch).exe"
-          $keepFileName = ".keep"
-          
-          $tagName = "${{ needs.create-release-and-build-windows.outputs.release-tag }}"
-          Write-Host "Building portable bundle for $arch architecture: $zipName"
-          Write-Host "Using release tag: $tagName"
-          
-          $exe = Get-ChildItem -Path $releaseDir -Filter "*.exe" | Where-Object { $_.Name -notmatch "setup" } | Select-Object -First 1
-          if (-not $exe) { Write-Error "Could not find main exe in $releaseDir" }
-          
-          New-Item -ItemType Directory -Path "$layoutRoot/$portableFolder" -Force | Out-Null
-          New-Item -ItemType File -Path "$layoutRoot/$portableFolder/$keepFileName" -Value "Do not remove this file or directory." -Force | Out-Null
-          Copy-Item $exe.FullName -Destination "$layoutRoot/$exeName" -Force
-          
-          Compress-Archive -Path "$layoutRoot/*" -DestinationPath $zipName -Force
-      
-          echo "PORTABLE_ASSET=$zipName" >> $env:GITHUB_ENV
-          echo "RELEASE_TAG=$tagName" >> $env:GITHUB_ENV
-
-      - name: Upload Portable (Windows ARM only)
-        if: matrix.platform == 'windows-11-arm'
-        shell: bash
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Uploading ${PORTABLE_ASSET} to release ${RELEASE_TAG}"
-          gh release upload "${RELEASE_TAG}" "${PORTABLE_ASSET}" --clobber
-
-      - name: Install VC++ runtime (Windows ARM64 only)
-        if: matrix.platform == 'windows-11-arm'
-        shell: pwsh
-        run: |
-          $installer = Join-Path $env:RUNNER_TEMP "vc_redist.arm64.exe"
-          Invoke-WebRequest -Uri "https://aka.ms/vc14/vc_redist.arm64.exe" -OutFile $installer
-          Start-Process -FilePath $installer -ArgumentList "/install","/quiet","/norestart" -Wait
