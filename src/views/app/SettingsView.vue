@@ -41,7 +41,7 @@
               {{ t('about.links.wiki') }}
             </a>
             <hr class="divider divider-horizontal mx-0 border-none">
-            <a href="https://github.com/jzbqy/youtube-dl-gui/issues/new?template=bug_report.md" class="link" target="_blank" rel="noopener">
+            <a href="https://github.com/jzbqy/youtube-dl-gui/issues/new" class="link" target="_blank" rel="noopener">
               {{ t('about.links.reportABug') }}
             </a>
           </div>

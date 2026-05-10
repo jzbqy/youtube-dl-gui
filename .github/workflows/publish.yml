@@ -38,6 +38,9 @@ jobs:
       - name: Install frontend dependencies
         run: npm ci
 
+      - name: Generate licenses
+        run: npm run licenses
+
       - name: Install tauri-cli
         shell: bash
         run: |
