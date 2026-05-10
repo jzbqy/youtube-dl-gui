@@ -92,6 +92,7 @@ See the assets to download this version and install.'
           includeUpdaterJson: true
           tauriScript: 'cargo tauri'
           args: ''
+          force: true
 
       - name: Bundle Portable Version
         shell: pwsh
