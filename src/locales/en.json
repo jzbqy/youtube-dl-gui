@@ -964,9 +964,8 @@
     "viewLicenses": "View licenses",
     "version": "Version: {version}",
     "links": {
-      "githubCn": "Simplified Chinese Fork GitHub",
-      "githubOriginal": "Original Author GitHub",
-      "wiki": "Wiki / Tutorials",
+      "github": "GitHub",
+      "wiki": "Wiki",
       "reportABug": "Report a bug"
     }
   }

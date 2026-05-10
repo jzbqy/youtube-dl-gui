@@ -1,0 +1,12 @@
+  "about": {
+    "title": "About",
+    "credit": "Made with ❤ by jely2002 & contributors",
+    "poweredBy": "Powered by open source:",
+    "viewLicenses": "View licenses",
+    "version": "Version: {version}",
+    "links": {
+      "github": "GitHub",
+      "wiki": "Wiki",
+      "reportABug": "Report a bug"
+    }
+  }

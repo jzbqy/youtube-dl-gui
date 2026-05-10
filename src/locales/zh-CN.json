@@ -964,8 +964,7 @@
     "viewLicenses": "查看许可证",
     "version": "版本：{version}",
     "links": {
-      "githubCn": "简体中文定制版 GitHub",
-      "githubOriginal": "原作者 GitHub",
+      "github": "GitHub",
       "wiki": "教程文档",
       "reportABug": "报告错误"
     }

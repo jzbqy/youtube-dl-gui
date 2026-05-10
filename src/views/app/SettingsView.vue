@@ -29,11 +29,11 @@
         <div class="flex flex-col gap-2">
           <div class="flex gap-2 mb-2 w-full">
             <a href="https://github.com/jzbqy/youtube-dl-gui" class="link link-subtle" target="_blank" rel="noopener">
-              {{ t('about.links.githubCn') }}
+              {{ t('about.links.github') }}
             </a>
             <hr class="divider divider-horizontal mx-0 border-none">
             <a href="https://github.com/jely2002/youtube-dl-gui" class="link link-subtle" target="_blank" rel="noopener">
-              {{ t('about.links.githubOriginal') }}
+              Original GitHub
             </a>
           </div>
           <div class="flex gap-2 mb-2 w-full">
